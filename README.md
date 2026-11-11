@@ -1,7 +1,5 @@
 # EV Energy and Thermal Monitoring
 
-**CIS 5450 – Big Data Analytics · University of Pennsylvania · Fall 2026**
-
 We are building a context-aware EV energy and thermal monitoring system. It learns how electric vehicles behave from about two years of real-world telemetry (7 vehicles), groups trips into driving regimes, forecasts battery temperature and trip energy use, and tests which conditions drive them.
 
 The full Phase 1 write-up (what was done, findings, what every file is) is in **[docs/PHASE1_REPORT.md](docs/PHASE1_REPORT.md)**.
