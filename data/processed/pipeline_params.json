@@ -1,0 +1,50 @@
+{
+  "BUCKET_S": 10,
+  "FILL_MAX_GAP_S": 60,
+  "MOVING_KMH": 2.0,
+  "MAX_STOP_S": 300,
+  "MIN_TRIP_S": 120,
+  "MIN_TRIP_KM": 0.5,
+  "CHARGE_SOC_GAIN": 1.0,
+  "INTERP_COLS": [
+    "bat_temp",
+    "bat_temp_min"
+  ],
+  "SLOW_INTERP_MAX_GAP_S": 600,
+  "signal_columns": {
+    "1200": "hv_voltage",
+    "4": "speed",
+    "56": "hv_aux_power",
+    "900": "soc",
+    "1269": "coolant_temp",
+    "1265": "rotor_temp",
+    "961": "motor_temp",
+    "1272": "bat_inlet_temp",
+    "1273": "bat_outlet_temp",
+    "15": "ambient_temp",
+    "1205": "sig_1205_ptc1_strom_ptc1_current_p",
+    "1207": "sig_1207_ptc_spannung_ptc_voltage_",
+    "1208": "bat_temp_min",
+    "1209": "bat_temp",
+    "43": "interior_temp"
+  },
+  "despiked": {
+    "bat_inlet_temp": 18526,
+    "bat_outlet_temp": 19599,
+    "coolant_temp": 104,
+    "motor_temp": 86,
+    "rotor_temp": 169,
+    "ambient_temp": 42
+  },
+  "unit_notes": [],
+  "power_note": "No HV current signal -> energy must be measured as SOC%/km (as in the proposal).",
+  "n_raw_rows": 98060402,
+  "n_grid_rows": 911145,
+  "n_trips": 2389,
+  "checks": {
+    "unique (vehicle, ts)": true,
+    "every trip has >= 1 moving bucket": true,
+    "no trip spans two vehicles": true,
+    "share of trips with SOC decrease": 0.972
+  }
+}

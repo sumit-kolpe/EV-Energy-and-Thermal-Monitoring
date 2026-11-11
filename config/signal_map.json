@@ -1,0 +1,49 @@
+{
+  "reviewed": true,
+  "schema": {
+    "time_col": "time",
+    "time_type": "TIMESTAMP_NS",
+    "time_unit": null,
+    "id_col": "value_id",
+    "id_type": "BIGINT",
+    "value_col": "value",
+    "vehicle_col": "vehicle_id",
+    "ts_min": "2020-01-01",
+    "ts_max": "2024-12-31"
+  },
+  "signals": {
+    "speed": "4",
+    "soc": "900",
+    "bat_temp": "1209",
+    "bat_temp_min": "1208",
+    "bat_inlet_temp": "1272",
+    "bat_outlet_temp": "1273",
+    "hv_voltage": "1200",
+    "ambient_temp": "15",
+    "interior_temp": "43",
+    "hv_aux_power": "56",
+    "coolant_temp": "1269",
+    "motor_temp": "961",
+    "rotor_temp": "1265",
+    "cell_voltage_max": null,
+    "cell_voltage_min": null
+  },
+  "keep_value_ids": [
+    "1200",
+    "4",
+    "56",
+    "900",
+    "1269",
+    "1265",
+    "961",
+    "1272",
+    "1273",
+    "15",
+    "1205",
+    "1207",
+    "1208",
+    "1209",
+    "43"
+  ],
+  "note": "Edit 'signals' if a mapping is wrong, then set reviewed=true."
+}

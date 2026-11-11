@@ -1,0 +1,13 @@
+# raw download (1.2 GB) and regenerated intermediates
+data/raw/
+data/interim/
+*.zip
+*.part
+# python / jupyter
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
