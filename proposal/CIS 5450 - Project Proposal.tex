@@ -1,0 +1,257 @@
+\documentclass[11pt,letterpaper]{article}
+
+% ---------- Packages ----------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{charter}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\usepackage[margin=0.9in]{geometry}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs,tabularx,array}
+\usepackage{fancyhdr}
+\usepackage{needspace}
+
+\usepackage{hyperref}
+\definecolor{linkblue}{HTML}{0645AD}
+\hypersetup{colorlinks=true,urlcolor=black,linkcolor=black,citecolor=black}
+\newcommand{\weblink}[2]{\href{#1}{\underline{#2}}}
+
+% ---------- Section styling (plain, resume-style) ----------
+\setcounter{secnumdepth}{2}
+\newcommand{\sectionbox}[1]{\parbox[t]{\linewidth}{\thesection\hspace{0.8em}\MakeUppercase{#1}\\[-6pt]{\color{gray}\rule{\linewidth}{0.4pt}}}}
+\titleformat{\section}{\large\bfseries}{}{0em}{\sectionbox}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.8em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{}{0em}{}
+\titlespacing*{\section}{0pt}{22pt}{12pt}
+\titlespacing*{\subsection}{0pt}{14pt}{5pt}
+\titlespacing*{\subsubsection}{0pt}{12pt}{4pt}
+
+% ---------- Lists & paragraphs ----------
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlist{itemsep=2pt,topsep=2pt,parsep=0pt}
+\setlist[itemize]{leftmargin=1.5em,label=\textbullet}
+\setlist[enumerate]{leftmargin=1.8em,label=\arabic*.}
+\newlist{hyp}{description}{1}
+\newenvironment{rqblock}{\par\noindent\begin{minipage}{\linewidth}\setlength{\parskip}{4pt}}{\end{minipage}\par}
+\setlist[hyp]{leftmargin=0pt,labelsep=0.4em,itemsep=2pt,topsep=1pt,font=\normalfont\bfseries}
+
+\widowpenalty=10000
+\clubpenalty=10000
+\newcommand{\extn}{\textit{\textmd{(Extension)}}}
+\newcommand{\target}[1]{\par\nopagebreak[4]\textbf{Target variable:} \textit{#1}\par}
+\newcommand{\socpk}{\mathrm{SOC\%/km}}
+
+% ---------- Page style ----------
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[C]{\small\thepage}
+
+\begin{document}
+
+% ---------- Title block ----------
+\thispagestyle{fancy}
+\begin{center}
+  {\LARGE\bfseries CIS 5450 PROJECT PROPOSAL}\\[4pt]
+  {\large EV Energy and Thermal Monitoring}\\[4pt]
+  Dee Xie\enspace{\textbar}\enspace Hari Raman\enspace{\textbar}\enspace Sumit Kolpe\enspace{\textbar}\enspace Aditya Bajoria\enspace{\textbar}\enspace Aditya Muppavarapu
+\end{center}
+\vspace{4pt}
+
+% =====================================================================
+\section{Data Source}
+
+\subsection{Primary Dataset}
+We will use the \weblink{https://github.com/TUMFTM/electric-vehicle-uds-dataset}{\textbf{TUM Electric Vehicle UDS Dataset}} as our main dataset. It contains real driving, charging and parking logs from \textbf{seven electric vehicles}.
+
+\begin{itemize}
+  \item \textbf{Raw size:} 98M rows $\times$ 4 columns (\texttt{vehicle\_id}, \texttt{time}, \texttt{value\_id}, \texttt{value}) across 7 Parquet files. Each row is one sensor reading, and \texttt{value\_id} indicates which sensor it comes from.
+  \item \textbf{Signals:} The value column contains 29 signals; 14 of these are missing, leaving \textbf{15 usable signals}.
+  \item \textbf{Reshaping:} We keep \textbf{9 useful signals} (speed, battery voltage, state of charge, temperatures, etc.), pivot each into its own column, and average readings over \textbf{10-second windows}.
+  \item \textbf{Working size:} approximately \textbf{309,000 rows $\times$ 12 columns}.
+\end{itemize}
+
+\subsection{Additional Dataset \textit{\textmd{(if needed)}}}
+The \weblink{https://data.gov.de/suche/daten/electric-vehicle-usage-and-state-of-health-dataf7e88}{\textbf{TUM Electric Vehicle Usage and State of Health Data}} contains real-world vehicle usage together with \textbf{battery State of Health (SOH)} measurements. It may be used as an \textit{extension} to investigate whether long-term operating patterns derived from telemetry can be used to estimate battery health.
+
+\begin{itemize}
+  \item Data collected from 7 production electric vehicles, including the Volkswagen ID.3, CUPRA Born and Tesla Model 3, covering approximately \textbf{169,760\,km} of real-world operation.
+  \item Sampled at \textbf{1-minute intervals}; includes HV State of Charge (SOC), battery temperature, mileage, estimated range, motor RPM, SOH and more.
+  \item \textbf{Working size:} will depend on the number of usable SOH measurements and driving/charging periods after preprocessing.
+\end{itemize}
+
+% =====================================================================
+\section{Objective and Value Proposition}
+
+Our objective is to understand and develop a \textbf{context-aware EV energy and thermal monitoring system} that learns expected vehicle behaviour from two years of real-world data across seven vehicles, and predicts \textbf{near-future battery load}.
+
+Predicting battery temperature could support \textit{proactive cooling} and reduce \textit{battery degradation}, while forecasting energy consumption could improve \textit{driving-range estimates}. Analyzing driving patterns could also help identify conditions associated with lower energy efficiency.
+
+We focus on the following main problems:
+\begin{enumerate}
+  \item \textbf{Driving regimes:} Identify driving regimes by clustering trips on variables such as speed, motor RPM and trip duration. The resulting regime can serve as an input feature for subsequent models.
+  \item \textbf{Battery temperature forecasting:} Can we predict battery temperature, say, 5 minutes ahead? Given current operating conditions, what is the probability that battery temperature will exceed a threshold, classifying the later portion of the trip as thermally demanding?
+  \item \textbf{Trip energy forecasting:} Can the initial portion of a trip be used to forecast energy consumption for the remainder of the trip?
+  \item \textbf{Usage patterns and SOH:} When operating patterns are summarized over many trips (Dataset 1), do they help us understand or predict SOH (Dataset 2), and which real-world usage patterns are most strongly associated with battery degradation?
+\end{enumerate}
+
+\subsection{Why Is It Interesting?}
+This is a typical \textbf{predictive-maintenance} problem:
+\begin{itemize}
+  \item Identifying driving regimes is useful for fleet managers to classify and score drivers in practice.
+  \item EV battery energy consumption and temperature depend heavily on real-world driving conditions.
+  \item Early prediction of unusually high energy demand or thermal load could help manufacturers and fleet operators improve range estimation, thermal-management decisions and vehicle efficiency, and identify abnormal operating behaviour early.
+\end{itemize}
+
+% =====================================================================
+\section{Modeling Plan}
+
+We will use \textbf{DuckDB} to efficiently query and aggregate the large telemetry dataset, and \textbf{Pandas/NumPy} for preprocessing. The project is divided into the following sub-problems.
+
+\subsection{Identifying Driving Patterns (Unsupervised Learning)}\label{sp:1}
+\begin{itemize}
+  \item \textbf{K-Means} will be the primary clustering method, grouping trips on variables such as speed, motor RPM and trip duration. Cluster quality will be evaluated using the \textbf{silhouette score}.
+  \item \textbf{PCA} will be used to visualize the resulting clusters and understand which variables separate the driving regimes.
+\end{itemize}
+
+\textit{Example regimes:}
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|c|l|}
+  \hline
+  \textbf{Cluster} & \textbf{Driving regime} \\
+  \hline
+  1 & Slow stop-and-go urban driving \\
+  \hline
+  2 & Moderate mixed driving \\
+  \hline
+  3 & Sustained high-speed driving \\
+  \hline
+  4 & Aggressive high-dynamic driving \\
+  \hline
+\end{tabular}
+\end{center}
+
+\subsection{Battery Temperature Forecasting (Supervised Learning)}\label{sp:2}
+We aim to determine whether recent operating conditions can predict battery thermal behaviour several minutes into the future.
+\begin{itemize}
+  \item For the regression task, we will use battery temperature, vehicle speed, SOC, motor RPM, battery voltage/current and ambient temperature to predict future battery temperature.
+  \item A simple regression or \textbf{ARIMA} model will serve as the \textit{baseline}, compared against \textbf{XGBoost}, \textbf{Random Forest} and an \textbf{LSTM} neural network. The LSTM will use sequential telemetry from the previous several minutes to learn temporal dependencies in battery thermal behaviour.
+  \item Models will be evaluated using \textbf{RMSE} and $\boldsymbol{R^2}$.
+\end{itemize}
+\target{Battery temperature $x$ minutes ahead, or the expected rise in battery temperature after $x$ minutes of operation.}
+
+\subsection{Future Trip Energy Use (Supervised Regression)}\label{sp:3}
+We aim to determine whether the initial portion of an EV trip can be used to predict energy consumption during the remainder of the same trip.
+\begin{itemize}
+  \item From the first few minutes of a trip, we will extract features such as vehicle speed, acceleration, motor RPM, SOC, battery voltage/current, temperature, trip characteristics and the identified driving regime.
+  \item These early operating conditions will be used to predict energy consumption over the next part of the trip.
+  \item \textbf{Lasso Regression} will serve as the \textit{baseline}, compared against \textbf{XGBoost} or \textbf{Random Forest}. We will also explore an \textbf{LSTM} to capture temporal patterns in energy demand.
+\end{itemize}
+\target{Energy consumption over the future trip segment, in Wh/km (or total Wh).}
+
+\subsection{Thermal Demand Classification \extn}\label{sp:4}
+We aim to predict whether the battery will enter a thermally demanding condition within the next 5 minutes, given the vehicle's current operating conditions.
+\begin{itemize}
+  \item Inputs are the same as for temperature forecasting: battery temperature, vehicle speed, SOC, motor RPM, battery voltage, ambient temperature and the identified driving regime.
+  \item \textbf{Logistic Regression} will serve as the \textit{baseline}, compared against \textbf{Random Forest} and \textbf{XGBoost}.
+  \item Models will be evaluated using \textbf{precision}, \textbf{recall}, \textbf{F1-score} and \textbf{ROC-AUC}.
+\end{itemize}
+\target{A binary thermal-demand label $D_T$, where $D_T = 1$ denotes a high-temperature or high-temperature-rise event within the next 5 minutes and $D_T = 0$ denotes normal thermal behaviour.}
+
+\subsection{Usage Patterns and Battery State of Health \extn}\label{sp:5}
+We aim to understand whether long-term operating patterns are associated with battery degradation, using the TUM Electric Vehicle Usage and State of Health dataset.
+\begin{itemize}
+  \item Usage over many trips will be summarized into features such as the share of time spent in each driving regime, average speed, battery temperature exposure, SOC range used and mileage.
+  \item \textbf{Lasso Regression} will serve as the \textit{baseline}, compared against \textbf{Random Forest}; both will be evaluated using \textbf{RMSE} and \textbf{MAE}.
+  \item \textbf{Feature importance} will be used to identify which usage patterns are most strongly associated with battery degradation.
+  \item With only seven vehicles, results will be treated as \textit{exploratory}.
+\end{itemize}
+\target{Battery State of Health (SOH), or the change in SOH over a period.}
+
+% =====================================================================
+\section{Hypothesis Testing}
+
+We will use \textbf{permutation tests} to assess whether the relationship underlying each research question is statistically significant. Each test uses the \textbf{trip as the unit of analysis}. Labels or features are shuffled across trips \textbf{within the same vehicle}, which accounts for the uneven number of trips per vehicle and for the correlation between readings within a trip. P-values are estimated from \textbf{10,000 permutations}, and the specific groups compared will be decided \textit{once clustering results are available}.
+
+\subsection{RQ1: Driving Regimes \textnormal{(Section~\ref{sp:1})}}
+\begin{rqblock}\begin{hyp}
+  \item[Hypothesis:] Mean energy consumption ($\socpk$) differs between two driving regimes identified by clustering (e.g.\ urban stop-and-go vs.\ sustained high-speed driving).
+  \item[Null hypothesis ($H_0$):] Energy consumption \textit{does not depend} on the driving regime. Simulated by a permutation test that exchanges trips between driving-regime clusters.
+  \item[Test statistic:] Absolute difference in mean $\socpk$ between regimes A and B:\[\left|\,\bar{m}_{\socpk,\,A} - \bar{m}_{\socpk,\,B}\,\right|\]Alternatively, the standard deviation of mean $\socpk$ across all identified regimes.
+\end{hyp}\end{rqblock}
+
+\subsection{RQ2: Battery Temperature Forecasting \textnormal{(Section~\ref{sp:2})}}
+\begin{rqblock}\begin{hyp}
+  \item[Hypothesis:] Recent operating conditions (speed, motor RPM, SOC, battery voltage) help predict battery temperature 5 minutes ahead, beyond what the current battery temperature already indicates.
+  \item[Null hypothesis ($H_0$):] Battery temperature 5 minutes ahead \textit{does not depend} on recent operating conditions once current temperature is known. Simulated by a permutation test that exchanges all $(t,\ t+5\,\text{min})$ pairs across all trips of a single vehicle.
+  \item[Test statistic:] Mean absolute error between the measured and predicted 5-minute temperature change:\[\left|\,\Delta T - \widehat{\Delta T}\,\right|\]
+\end{hyp}\end{rqblock}
+
+\subsection{RQ3: Future Trip Energy Use \textnormal{(Section~\ref{sp:3})}}
+\begin{rqblock}\begin{hyp}
+  \item[Hypothesis:] Driving behaviour in the first few minutes of a trip predicts energy consumption over the rest of the trip.
+  \item[Null hypothesis ($H_0$):] Remaining-trip energy consumption \textit{does not depend} on early-trip driving behaviour.
+  \item[Test statistic:] Test $R^2$ of the baseline (Lasso) model, compared against a null distribution built by shuffling the remaining-trip $\socpk$ across trips and refitting the model.
+\end{hyp}\end{rqblock}
+
+\subsection{RQ4: Thermal Demand Classification \textnormal{(Section~\ref{sp:4})}}
+\begin{rqblock}\begin{hyp}
+  \item[Hypothesis:] Recent history, including battery temperature, vehicle speed, SOC, motor RPM, battery voltage, ambient temperature and the identified driving regime, predicts thermal demand 5 minutes in advance.
+  \item[Null hypothesis ($H_0$):] This recent history has \textit{no relationship} with thermal demand 5 minutes in advance. Simulated by a permutation test that exchanges all $(t,\ t+5\,\text{min})$ pairs across all trips of a single vehicle.
+  \item[Test statistic:] Mean absolute difference between the measured and predicted thermal-demand label:\[\left|\,D_T - \widehat{D}_T\,\right|\]
+\end{hyp}\end{rqblock}
+
+\subsection{RQ5: Battery SOH Prediction \textnormal{(Section~\ref{sp:5})}}
+\begin{rqblock}\begin{hyp}
+  \item[Hypothesis:] Driving patterns over a vehicle's history predict its battery SOH at the end of that history.
+  \item[Null hypothesis ($H_0$):] Driving patterns over a vehicle's history have \textit{no relationship} with its battery SOH at the end of that history. Simulated by exchanging the end-of-history SOH labels between vehicles.
+  \item[Test statistic:] Test $R^2$ of the baseline (Lasso) model.
+\end{hyp}\end{rqblock}
+
+% =====================================================================
+\section{Roles}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{|>{\bfseries}p{0.24\linewidth}|>{\raggedright\arraybackslash}X|}
+  \hline
+  Member & \textbf{Main responsibility} \\
+  \hline
+  Aditya Muppavarapu & Supervised Learning: trip energy usage; Unsupervised Learning \\
+  \hline
+  Dee Xie & Supervised Learning: battery temperature forecasting; Data cleaning, EDA \\
+  \hline
+  Aditya Bajoria & Unsupervised Learning; Hypothesis Testing \\
+  \hline
+  Hari Raman & Hypothesis Testing and Bootstrapping; Supervised Learning: battery temperature forecasting \\
+  \hline
+  Sumit Kolpe & Data loading, cleaning, EDA; Supervised Learning: trip energy usage \\
+  \hline
+\end{tabularx}
+\end{center}
+
+% =====================================================================
+\section{Anticipated Obstacles and Challenges}
+
+\subsection{Assumptions}
+\begin{itemize}
+  \item Vehicles always drive on \textbf{flat terrain}, and the \textbf{load (mass)} of each vehicle is the same and \textbf{constant over time}.
+  \item All deviations in current demand are a function of \textbf{driving style}, not external driving demands.
+  \item \textbf{Odometer readings} can be computed from previous data.
+  \item The data is \textbf{complete} in terms of distance travelled, i.e.\ all vehicle activity is recorded, since our predictions may depend on all previous vehicle activity.
+  \item Distance travelled (odometer) can be calculated from \textbf{vehicle speed over time}.
+\end{itemize}
+
+\subsection{Further Challenges}
+\begin{enumerate}
+  \item \textbf{Uneven data across vehicles:} Some vehicles have far more trips than others; for example, one vehicle has \textbf{248 trips} and another has only \textbf{7}.
+  \item \textbf{No direct energy measurement:} The data contains no battery current, so energy use is measured as \textbf{battery percentage used per km}. We may include only trips above a minimum distance, such as 20\,km.
+  \item \textbf{No location data:} Without latitude and longitude, we cannot account for weather, which may affect energy usage.
+\end{enumerate}
+
+\end{document}

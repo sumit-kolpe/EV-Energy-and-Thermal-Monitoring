@@ -1,6 +1,5 @@
-# raw download (1.2 GB) and regenerated intermediates
-data/raw/
-data/interim/
+# data is downloaded and built locally by the notebook (raw ~1.2 GB, processed ~30 MB)
+data/
 *.zip
 *.part
 # python / jupyter
@@ -11,3 +10,5 @@ __pycache__/
 .DS_Store
 Thumbs.db
 desktop.ini
+# virtual environment
+.venv/
